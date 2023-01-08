@@ -22,29 +22,40 @@ class PlacesListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer<GreatPlacesProvider>(
-        child: const Center(
-          child: Text('Got no places yet, start adding some!'),
-        ),
-        builder: (ctx, greatPlacesData, ch) {
-          return greatPlacesData.items.isEmpty
-              ? ch!
-              : ListView.builder(
-                itemCount: greatPlacesData.items.length,
-                  itemBuilder: (ctx, index) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: FileImage(greatPlacesData.items[index].image),
-                      ),
-                      title: Text(greatPlacesData.items[index].title),
-                      onTap: (){
-                        //Todo: go to details page later
-                      },
-                    );
-                  },
-                );
-        },
-      ),
+      body: FutureBuilder(
+          future: Provider.of<GreatPlacesProvider>(context, listen: false)
+              .fetchAndSetPlaces(),
+          builder: (ctx, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return Consumer<GreatPlacesProvider>(
+              child: const Center(
+                child: Text('Got no places yet, start adding some!'),
+              ),
+              builder: (ctx, greatPlacesData, ch) {
+                return greatPlacesData.items.isEmpty
+                    ? ch!
+                    : ListView.builder(
+                        itemCount: greatPlacesData.items.length,
+                        itemBuilder: (ctx, index) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage:
+                                  FileImage(greatPlacesData.items[index].image),
+                            ),
+                            title: Text(greatPlacesData.items[index].title),
+                            onTap: () {
+                              //Todo: go to details page later
+                            },
+                          );
+                        },
+                      );
+              },
+            );
+          }),
     );
   }
 }
