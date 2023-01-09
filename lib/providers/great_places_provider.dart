@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:places_app/helpers/db_helper.dart';
+import 'package:places_app/helpers/location_helper.dart';
 import 'package:places_app/models/place.dart';
 
 class GreatPlacesProvider with ChangeNotifier {
@@ -9,11 +10,21 @@ class GreatPlacesProvider with ChangeNotifier {
 
   List<Place> get items => _items;
 
-  void addPlace(String pickedTitle, File pickedImage) {
+  void addPlace(
+    String pickedTitle,
+    File pickedImage,
+    PlaceLocation pickedLocation,
+  ) async {
+    final address = await LocationHelper.getPlaceAddress(
+        pickedLocation.latitude, pickedLocation.longitude);
+    final updatedLocation = PlaceLocation(
+        latitude: pickedLocation.latitude,
+        longitude: pickedLocation.longitude,
+        address: address);
     final newPlace = Place(
       id: DateTime.now().toString(),
       title: pickedTitle,
-      location: null,
+      location: updatedLocation,
       image: pickedImage,
     );
     _items.add(newPlace);
@@ -22,6 +33,9 @@ class GreatPlacesProvider with ChangeNotifier {
       'id': newPlace.id,
       'title': newPlace.title,
       'image': newPlace.image.path,
+      'loc_lat': newPlace.location!.latitude,
+      'loc_lng': newPlace.location!.longitude,
+      'address': newPlace.location!.address!,
     });
   }
 
@@ -31,10 +45,14 @@ class GreatPlacesProvider with ChangeNotifier {
         .map((item) => Place(
               id: item['id'],
               title: item['title'],
-              location: null,
               image: File(item['image']),
+              location: PlaceLocation(
+                latitude: item['loc_lat'],
+                longitude: item['loc_lng'],
+                address: item['address'],
+              ),
             ))
         .toList();
-        notifyListeners();
+    notifyListeners();
   }
 }
